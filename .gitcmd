@@ -1,0 +1,464 @@
+# fetches and updates all remote branches
+# Deprecated, use alias in .gitconfig
+function rfa()
+{
+    cd $SANDROOT
+
+    eval git fetch ashah
+    eval git fetch akellberg
+    eval git fetch sprajapati
+    eval git fetch jzeng
+    eval git fetch dmcalpin
+    eval git fetch sbatta
+    eval git fetch chuynh
+    eval git fetch pvlasenko
+}
+
+function codereview()
+{
+   if [ "$1" = ""  ]; then
+      git diff ... master
+   else
+      git diff ...$1
+   fi
+}
+
+# git aliases and commands
+function list()
+{
+   echo "----------------------------------------------------------------------------------------------------------"
+   echo "	Lists aliased commands and their usage"
+   echo "----------------------------------------------------------------------------------------------------------"
+   echo "	a - git add. Adds one or more files.  To adding all files modified in branch type 'a .' without quotes"
+   echo "	b - git branch"
+   echo "	c - git commit. If you'd like to add a comment, call as 'c message'. message needs to be in quotes. If you'd like to push it to public repo, add pu to the end of this - 'c message pu'. Add r to the end to begin prop script - 'c message r'"
+   echo "	d - git diff. Will perform diff on a file (d <file>) or all files"
+   echo "	dao - git diff origin <branch>. Will perform diff against origin on a file (dao <branch> <file>) or all files (dao <branch>)"
+   echo "	f - git fetch"
+   echo "	k - deletes a branch supplied. Short for kill. Usage: k <branch>"
+   echo "	l - git log. Optionally a file can added - l <file>"
+   echo "	m - git merge <branch>"
+   echo "	n - new branch creation. Requires new branch name (n <branch>) when new branch is created over master branch. Optionally accepts source branch name (n <branch> <sourcebranch>)"
+   echo "	p - git pull"
+   echo "   pu - git push <current branch>"
+   echo "	r - git prop"
+   echo "	s - git status"
+   echo "	u - Merges current branch from an updated master if source not supplied (u). Accepts an optional source branch which is updated with origin and with which current branch is merged"
+   echo "	ua - Performs above update action by iterating over all branched in user's repository"
+   echo "	co - git checkout <branch> Requires a <branch>"
+   echo "	cb - Checks out a branch by a). stashing changes in source branch b). checking out target branch c). popping any stashes for target branch"
+   echo "   cpi - git cherry-pick - takes a commit hash from anywhere in your branches or remote branches fetched and commits to current branch as a new commit"
+   echo "	rl - log of the last few actions"
+   echo "	rh - Revision/Commit history of a branch in short summary format"
+   echo "	cfl - Prints Commit file list in a specific commit or last commit. cfl <hash>(optional if only last commit is needed)"
+   echo "	fic - Prints all files(unique) in all commits so far"
+   echo "   prl - Prints commits and files on default branch or on the branch supplied"
+   echo "	st - git stash. A message can be supplied."
+   echo "	sl - git stash list"
+   echo "	sd - drops a stash. A stash number is required. Run ss to see stashes"
+   echo "	ss - shows information about last stash or if a number is supplied, nth stash's info"
+   echo "	sp - git stash pop"
+   echo "	sa - git stash apply. A number is required"
+   echo "	dor- diffs a file or all files in current branch"
+   echo "   gc - git clean"
+   echo "	ns - creates a new branch for a name provided and a stash id - number for an item in stash list"
+   echo "----------------------------------------------------------------------------------------------------------"
+}
+# creates new branch off master and applies a stash to it
+#$ a branch name and a stash number is required
+function ns()
+{
+	n $1
+	eval git stash apply stash@{$2}
+}
+function gc()
+{
+    git gc
+    git gc --aggressive
+    git prune
+}
+function a()
+{
+    for arg in "$*"
+    do
+    	eval git add ${arg}
+    done
+}
+
+function b()
+{
+    eval git branch -a
+}
+
+function c()
+{
+
+   if [ "$1" = ""  ]; then
+      echo "Committing without message..."
+      eval git commit
+   else
+      echo "Adding files..."
+      a .
+      echo "Committing with message..."
+      eval "git commit -m \"$1\""
+      if [ "$2" = "pu" ]; then
+         echo "Pushing to public repo..."
+         eval "$2"
+      fi
+      if [ "$2" = "r" ]; then
+         echo "Invoking prop script..."
+         eval "$2"
+      fi
+   fi
+}
+function pu()
+{
+   eval git push origin $(getCurrBranch)
+}
+function d()
+{
+    file=$1
+    if [ "$file" = "" ]; then
+    	eval git diff -w
+    else
+    	eval git diff -w $file
+    fi
+
+}
+# does a diff against origin for a branch specified - all or specified file
+function dao()
+{
+    branch=$1
+    file=$2
+    if [ "$file" = "" ]; then
+    	eval git diff origin $branch
+    else
+    	eval git diff origin $branch $file
+    fi
+
+}
+# does a diff against origin for current branch - all or specified file
+function dor()
+{
+    branch=$(getCurrBranch)
+    if [ "$1" = "" ]; then
+    	dao $branch
+    else
+	 	dao $branch $1
+    fi
+}
+function f()
+{
+    eval git fetch
+}
+
+function k()
+{
+    eval git branch -D $1
+}
+
+function l()
+{
+    file=$1
+    if [ "$file" = "" ]; then
+    	eval git log --stat
+    else
+    	eval git log $file --stat
+    fi
+}
+
+function m()
+{
+    eval git merge $1
+}
+
+# stashes current branch changes before creating new branch
+function n()
+{
+    st
+    source=$(getSourceBranch $2)
+    eval git checkout -b $1 $source
+}
+
+function p()
+{
+    eval git pull
+}
+
+function r()
+{
+    eval git prop
+}
+
+function s()
+{
+    eval git status
+}
+
+function sp()
+{
+   eval git stash pop
+}
+
+function st()
+{
+    echo "$1"
+    eval a .
+    if [ "$1" = "" ]; then
+    	eval git stash
+    else
+       eval git stash save "$1"
+    fi
+}
+
+# aliases list stash function
+function sl()
+{
+    eval git stash list
+}
+function sa()
+{
+    if [ "$1" = "" ]; then
+    	echo " A stash ID is required "
+    else
+    	eval git stash apply $1
+    fi
+}
+
+# aliases stash drop function
+function sd()
+{
+    if [[ "$1" = "" ]]; then
+    	echo " A stash number is required. Hit sl to see stashes and pick the number. Hit ss <number> to see info in that stash before deleting."
+    elif [[ "$1" = stash* ]]; then
+    	eval git stash drop $1
+    else
+	eval git stash drop stash@{$1}
+    fi
+}
+
+# aliases stash show function
+function ss()
+{
+    if [ "$1" = "" ]; then
+    	eval git stash show
+    else
+    	eval git stash show stash@{$1}
+    fi
+}
+
+
+# update current branch
+# takes a source branch, optional
+function u()
+{
+    #get current branch
+    branch=$(getCurrBranch)
+
+    # update source and merge with it
+    updateSourceBranch $1
+    updateBranch $branch $1
+}
+
+# tries to update all branches found in repo.
+# Fails on merge conflict exiting over current branch with merge conflicts
+# takes a source branch, optional
+function ua()
+{
+    #get current branch
+    branch=$(getCurrBranch)
+
+    # update source
+    updateSourceBranch $1
+
+    # loop thru all branchs and update
+    declare -a lines
+    lines=`git branch`
+    for line in $lines
+    do
+    	if [[ $line == M* ]]; then
+    		updateBranch $line $1
+    	fi
+    done
+
+    # switch back to original branch
+    co $branch
+}
+
+# First argument to this function must be branch name
+# Second, optional, could be source branch. Defaults to 'master'
+function updateBranch()
+{
+
+    # get source branch
+    source=$(getSourceBranch $2)
+
+    echo "==== Updating branch $1..."
+
+    # switch to current branch and merge with master
+    echo "==== Switching to $1 branch..."
+    co $1
+    echo "==== Merging $1 branch with $source..."
+    m $source
+
+    echo "$1 Branch update attempt completed."
+}
+
+function updateSourceBranch()
+{
+    # get source branch
+    source=$(getSourceBranch $1)
+
+    echo "==== Starting $source update..."
+
+    # go to source and pull
+    echo "==== Checking out $source..."
+    co $source
+    echo "==== Pulling changes into source..."
+    eval git pull
+
+    echo "==== Completed Updating $source."
+
+}
+
+function getCurrBranch()
+{
+    # find active branch
+    declare -a lines
+
+    # get all branches
+    # if output has * in it, this seems to execute on it and replaces * with all files in curr dir
+    lines=`git branch`
+
+    # find the first branch prefixed with a marker in list after those that don't
+    declare flag
+    for line in $lines
+    do
+    	if [[ $line != M* ]]; then
+    		flag=1
+    	elif [[ $flag == 1 ]]; then
+    		branch=$line
+    		break
+    	fi
+    done
+    echo $branch
+}
+
+function getSourceBranch()
+{
+    # setup source branch
+    declare source
+    source=$1
+    if [[ $source == "" ]]; then
+    	source="master"
+    fi
+    echo $source
+}
+
+function cpi()
+{
+    if [ "$1" != "" ]; then
+	eval git cherry-pick "$1"
+    fi
+}
+
+# works for branch for file. Does not do a Stash check
+function co()
+{
+    eval git checkout $1
+}
+
+#  Checks out a branch by a). stashing changes in source branch b). checking out target branch c). popping any stashes for target branch
+function cb()
+{
+    st
+    eval git checkout $1
+    targetStash=$(findStashId $1)
+    if [[ "$targetStash" != "" ]]; then
+	echo "Stash found. Applying..."
+        sa $targetStash
+    fi
+    sd $targetStash
+}
+
+# finds a stash id in stash list
+function findStashId()
+{
+	lines=$(sl)
+	for l in $lines
+	do
+		# if word contains stash@, save word removing colon char
+		if [[ $l = stash@* ]]; then
+			stashId=${l/:/}
+		# move until branch name is matched and return stashid
+		elif [[ ${l/:/} = $1 ]]; then
+			echo $stashId
+			break
+		fi
+	done
+}
+
+# Commit history of a branch
+function rh()
+{
+    eval git rev-list origin..HEAD --pretty=short
+}
+
+# log of last few actions
+function rl()
+{
+    eval git reflog
+}
+
+function prl()
+{
+    declare -a commits
+    if [ "$1" = "" ]; then
+        commits=$(git rev-list origin..HEAD)
+    else
+        commits=$(git rev-list origin..$1)
+    fi
+
+    declare -a files
+    for c in $commits
+    do
+    	files=$(cfl $c)
+	echo "----$c----"
+	echo "$files"
+	chr 10
+    done
+}
+
+# prints an ascii digit as character
+chr()
+{
+  printf \\$(printf '%03o' $1)
+}
+
+# Commit file list in a specific commit or last commit
+function cfl()
+{
+    if [ $# = 0 ]; then
+    	eval git show --pretty="format:" --name-status
+    else
+    	for arg in "$*"
+    	do
+    		eval git show --pretty="format:" --name-status ${arg}
+    	done
+    fi
+}
+
+# prints all unique files in commits so far
+function fic()
+{
+    prl | sort -u
+}
+
+# merges a single file from another commit
+# $1 is commit id
+# $2 is file
+function mf()
+{
+    eval git checkout --merge $1 $2
+}
+
