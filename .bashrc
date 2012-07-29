@@ -63,7 +63,7 @@ PS1="$LIGHT_GREEN\[\033[1;40m\][\u] \[\033[1;33m\]\$LIGHT_GREEN\w\[\033[0;37m\]]
 }
 proml
 
-source ~/git-completion.bash
+source ~/.git-completion.bash
 PROMPT_COMMAND=proml
 
 function cdp {
