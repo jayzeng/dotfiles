@@ -13,9 +13,9 @@
 "   - Surround
 " MAPING:
 "   leader = \
-"   - Ctrl+j 
+"   - Ctrl+j
 "   - Ctrl+k
-"   - jj = Esc   
+"   - jj = Esc
 "   - F2 = Display NerdTree
 "   - F6 = Display function list
 "   - \f = Display most recent files
@@ -25,10 +25,10 @@
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " General
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Turn on syntax highlighting 
+" Turn on syntax highlighting
 syntax on
 
-" Allows switching from unsaved buffer without saving it and share the history for multiple files. 
+" Allows switching from unsaved buffer without saving it and share the history for multiple files.
 set hidden
 
 " Turn on 256 color support
@@ -38,9 +38,9 @@ set t_Co=256
 "colorscheme cleanphp
 colorscheme jay
 
-"Enable file type 
-filetype plugin on 
-"filetype indent on 
+"Enable file type
+filetype plugin on
+"filetype indent on
 
 " Sync working directory with current working directory
 set autochdir
@@ -146,17 +146,17 @@ let Tlist_File_Fold_Auto_Close = 1
 let Tlist_GainFocus_On_ToggleOpen = 1
 
 " width of window
-let Tlist_WinWidth = 20 
+let Tlist_WinWidth = 20
 " close tlist when a selection is made
 let Tlist_Close_On_Select = 1
 
-" loads up my custom tags 
+" loads up my custom tags
 set tags=/usr/local/utilities/tags/intelius/tags
 
 """"""""""""""""""""""""""""""
 " Vim7 specific settings
 " Some hosts have vim6 and vim7 installed
-" Make sure you aliased vim=<path>/vim7 
+" Make sure you aliased vim=<path>/vim7
 """"""""""""""""""""""""""""""
 if version>=700
    autocmd FileType python set omnifunc=pythoncomplete#Complete
@@ -207,11 +207,11 @@ let php_sql_query=1
 let php_htmlInStrings=1
 
 
-" Don't use the PHP syntax folding 
-setlocal foldmethod=manual 
+" Don't use the PHP syntax folding
+setlocal foldmethod=manual
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Fuzzyfinder settings 
+" Fuzzyfinder settings
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 " After bringing up FufFile, **/<filename>
@@ -223,11 +223,9 @@ setlocal foldmethod=manual
 "omap <silent> ie <Plug>CamelCaseMotion_ie
 "xmap <silent> ie <Plug>CamelCaseMotion_ie
 
-source ~/.vim/php-doc.vim 
-
-inoremap <C-P> <ESC>:call PhpDocSingle()<CR>i 
-nnoremap <C-P> :call PhpDocSingle()<CR> 
-vnoremap <C-P> :call PhpDocRange()<CR> 
+inoremap <C-P> <ESC>:call PhpDocSingle()<CR>i
+nnoremap <C-P> :call PhpDocSingle()<CR>
+vnoremap <C-P> :call PhpDocRange()<CR>
 
 " json
 autocmd BufRead,BufNewFile *.json set filetype=javascript
@@ -239,3 +237,5 @@ function! KillTrailingWhitespace()
 endfunction
 
 autocmd BufWritePre * :call KillTrailingWhitespace()
+
+call pathogen#runtime_append_all_bundles()
