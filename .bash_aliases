@@ -12,3 +12,7 @@ alias ls='ls -hlaH --color=auto'
 # and exclude grepping through .svn folders.
 #alias grep='grep -r -n -H -i --color=auto'
 alias grep='grep -i -r -n -H --color=auto'
+
+
+# alias md5sum for MacOSX
+alias md5sum='/sbin/md5 -r'
