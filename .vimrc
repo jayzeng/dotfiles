@@ -150,8 +150,6 @@ let Tlist_WinWidth = 20
 " close tlist when a selection is made
 let Tlist_Close_On_Select = 1
 
-" loads up my custom tags
-set tags=/usr/local/utilities/tags/intelius/tags
 
 """"""""""""""""""""""""""""""
 " Vim7 specific settings
