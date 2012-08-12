@@ -181,6 +181,7 @@ endif
 " regonize autochdir
 autocmd BufEnter * lcd %:p:h
 nmap <silent> nd :NERDTreeToggle<CR>
+hi Directory guifg=#FF0000 ctermfg=red
 map <F9> :TlistToggle<CR>
 map th :tabfirst<CR>
 map tj :tabnext<CR>
