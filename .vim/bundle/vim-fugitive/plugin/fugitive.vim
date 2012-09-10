@@ -691,8 +691,28 @@ function! s:stage_info(lnum) abort
     return [matchstr(filename, ': *\zs.*'), 'staged']
   elseif getline(lnum+2) =~# '^# .*"git checkout ' || getline(lnum) ==# '# Changes not staged for commit:'
     return [matchstr(filename, ': *\zs.*'), 'unstaged']
+  elseif getline(lnum+1) =~# '^# .*"git add/rm ' || getline(lnum) ==# '# Unmerged paths:'
+    return [matchstr(filename, ': *\zs.*'), 'unmerged']
   else
     return [filename, 'untracked']
+  endif
+endfunction
+
+function! s:StageNext(count)
+  for i in range(a:count)
+    call search('^#\t.*','W')
+  endfor
+  return '.'
+endfunction
+
+function! s:StagePrevious(count)
+  if line('.') == 1 && exists(':CtrlP')
+    return 'CtrlP '.fnameescape(s:repo().tree())
+  else
+    for i in range(a:count)
+      call search('^#\t.*','Wbe')
+    endfor
+    return '.'
   endif
 endfunction
 
@@ -1355,9 +1375,6 @@ function! s:diffoff_all(dir)
       if exists('b:git_dir') && b:git_dir ==# a:dir
         call s:diffoff()
       endif
-      if exists('restorewinnr')
-        wincmd p
-      endif
     endif
   endfor
 endfunction
@@ -1595,13 +1612,13 @@ function! s:Blame(bang,line1,line2,count,args) abort
         execute top
         normal! zt
         execute current
-        execute "vertical resize ".(s:linechars('.\{-\}\d\ze\s\+\d\+)')+1)
+        execute "vertical resize ".(s:linechars('.\{-\}\ze\s\+\d\+)')+1)
         setlocal nomodified nomodifiable nonumber scrollbind nowrap foldcolumn=0 nofoldenable filetype=fugitiveblame
         if exists('+relativenumber')
           setlocal norelativenumber
         endif
-        nnoremap <buffer> <silent> q    :exe substitute('bdelete<Bar>'.bufwinnr(b:fugitive_blamed_bufnr).' wincmd w','<Bar>-1','','')<CR>
-        nnoremap <buffer> <silent> gq   :exe substitute('bdelete<Bar>'.bufwinnr(b:fugitive_blamed_bufnr).' wincmd w<Bar>if expand("%:p") =~# "^fugitive:[\\/][\\/]"<Bar>Gedit<Bar>endif','<Bar>-1','','')<CR>
+        nnoremap <buffer> <silent> q    :exe substitute(bufwinnr(b:fugitive_blamed_bufnr).' wincmd w<Bar>'.bufnr('').'bdelete','^-1','','')<CR>
+        nnoremap <buffer> <silent> gq   :exe substitute(bufwinnr(b:fugitive_blamed_bufnr).' wincmd w<Bar>'.bufnr('').'bdelete<Bar>if expand("%:p") =~# "^fugitive:[\\/][\\/]"<Bar>Gedit<Bar>endif','^-1','','')<CR>
         nnoremap <buffer> <silent> <CR> :<C-U>exe <SID>BlameJump('')<CR>
         nnoremap <buffer> <silent> -    :<C-U>exe <SID>BlameJump('')<CR>
         nnoremap <buffer> <silent> P    :<C-U>exe <SID>BlameJump('^'.v:count1)<CR>
@@ -2001,8 +2018,8 @@ function! s:BufReadIndex()
     call s:JumpInit()
     nunmap   <buffer>          P
     nunmap   <buffer>          ~
-    nnoremap <buffer> <silent> <C-N> :call search('^#\t.*','W')<Bar>.<CR>
-    nnoremap <buffer> <silent> <C-P> :call search('^#\t.*','Wbe')<Bar>.<CR>
+    nnoremap <buffer> <silent> <C-N> :<C-U>execute <SID>StageNext(v:count1)<CR>
+    nnoremap <buffer> <silent> <C-P> :<C-U>execute <SID>StagePrevious(v:count1)<CR>
     nnoremap <buffer> <silent> - :<C-U>execute <SID>StageToggle(line('.'),line('.')+v:count1-1)<CR>
     xnoremap <buffer> <silent> - :<C-U>execute <SID>StageToggle(line("'<"),line("'>"))<CR>
     nnoremap <buffer> <silent> a :<C-U>let b:fugitive_display_format += 1<Bar>exe <SID>BufReadIndex()<CR>
@@ -2220,6 +2237,9 @@ augroup END
 function! s:JumpInit() abort
   nnoremap <buffer> <silent> <CR>    :<C-U>exe <SID>GF("edit")<CR>
   if !&modifiable
+    if exists(':CtrlP')
+      nnoremap <buffer> <silent> <C-P> :<C-U>exe 'CtrlP '.fnameescape(<SID>repo().tree())<CR>
+    endif
     nnoremap <buffer> <silent> o     :<C-U>exe <SID>GF("split")<CR>
     nnoremap <buffer> <silent> S     :<C-U>exe <SID>GF("vsplit")<CR>
     nnoremap <buffer> <silent> O     :<C-U>exe <SID>GF("tabedit")<CR>

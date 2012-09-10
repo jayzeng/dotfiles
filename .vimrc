@@ -238,3 +238,19 @@ endfunction
 autocmd BufWritePre * :call KillTrailingWhitespace()
 
 call pathogen#runtime_append_all_bundles()
+call pathogen#infect()
+call pathogen#helptags()
+
+" Plugin configs
+let g:CommandTAcceptSelectionMap = '<C-t>'
+let g:CommandTAcceptSelectionTabMap = '<CR>'
+let mapleader = ","
+
+" KEY MAPPINGS
+" " Minibuf keys
+map <leader>f :tabnext<CR>
+map <leader>b :tabprevious<CR>
+
+" " ack keys
+nmap <leader>a <Esc>:Ack!
+

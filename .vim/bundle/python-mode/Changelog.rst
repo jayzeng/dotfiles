@@ -1,6 +1,20 @@
 Changelog
 =========
 
+## 2012-09-07 0.6.9
+-------------------
+* Update autopep8
+* Improve pymode#troubleshooting#Test()
+
+## 2012-09-06 0.6.8
+-------------------
+* Add PEP8 indentation ":help 'pymode_indent'" 
+
+## 2012-08-15 0.6.7
+-------------------
+* Fix documentation. Thanks (c) bgrant;
+* Fix pymode "async queue" support.
+
 ## 2012-08-02 0.6.6
 -------------------
 * Updated Pep8 to version 1.3.3
