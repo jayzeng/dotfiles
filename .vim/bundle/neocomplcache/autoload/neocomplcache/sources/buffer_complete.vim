@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: buffer_complete.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 08 Sep 2012.
+" Last Modified: 05 Oct 2012.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -40,8 +40,6 @@ let s:source = {
 function! s:source.initialize()"{{{
   augroup neocomplcache"{{{
     " Caching events
-    autocmd BufRead,FileType,BufNewFile *
-          \ call s:check_source()
     autocmd CursorHold *
           \ call s:check_cache()
     autocmd BufWritePost *
@@ -52,7 +50,8 @@ function! s:source.initialize()"{{{
   augroup END"}}}
 
   " Set rank.
-  call neocomplcache#set_dictionary_helper(g:neocomplcache_source_rank,
+  call neocomplcache#util#set_default_dictionary(
+        \ 'g:neocomplcache_source_rank',
         \ 'buffer_complete', 5)
 
   " Create cache directory.
@@ -66,25 +65,10 @@ function! s:source.initialize()"{{{
   let s:rank_cache_count = 1
   let s:disable_caching_list = {}
   let s:async_dictionary_list = {}
-  let s:completion_length =
-        \ neocomplcache#get_auto_completion_length('buffer_complete')
   "}}}
 
   call neocomplcache#set_completion_length('buffer_complete',
         \ g:neocomplcache_auto_completion_start_length)
-
-  " Add commands."{{{
-  command! -nargs=? -complete=buffer -bar
-        \ NeoComplCacheCachingBuffer call s:caching_buffer(<q-args>)
-  command! -nargs=? -complete=buffer -bar
-        \ NeoComplCachePrintSource call s:print_source(<q-args>)
-  command! -nargs=? -complete=buffer -bar
-        \ NeoComplCacheOutputKeyword call s:output_keyword(<q-args>)
-  command! -nargs=? -complete=buffer -bar
-        \ NeoComplCacheDisableCaching call s:disable_caching(<q-args>)
-  command! -nargs=? -complete=buffer -bar
-        \ NeoComplCacheEnableCaching call s:enable_caching(<q-args>)
-  "}}}
 
   call s:check_source()
 endfunction
@@ -107,20 +91,15 @@ function! s:source.get_keyword_pos(cur_text)"{{{
 endfunction"}}}
 
 function! s:source.get_complete_words(cur_keyword_pos, cur_keyword_str)"{{{
-  if !s:exists_current_source()
-    call s:check_source()
-  endif
+  call s:check_source()
 
   let keyword_list = []
   for [key, source] in s:get_sources_list()
     call neocomplcache#cache#check_cache_list('buffer_cache',
-          \ source.path,
-          \ s:async_dictionary_list,
-          \ source.keyword_cache, s:completion_length)
+          \ source.path, s:async_dictionary_list, source.keyword_cache)
 
     let keyword_list += neocomplcache#dictionary_filter(
-          \ source.keyword_cache, a:cur_keyword_str,
-          \ s:completion_length)
+          \ source.keyword_cache, a:cur_keyword_str)
     if key == bufnr('%')
       let source.accessed_time = localtime()
     endif
@@ -155,6 +134,7 @@ function! s:caching_current_buffer(start, end, is_auto)"{{{
   let keyword_pattern2 = '^\%('.keyword_pattern.'\m\)'
   let keywords = source.keyword_cache
 
+  let completion_length = 2
   let line = join(getline(a:start, a:end))
   let match = match(line, keyword_pattern)
   while match >= 0"{{{
@@ -163,7 +143,7 @@ function! s:caching_current_buffer(start, end, is_auto)"{{{
     " Ignore too short keyword.
     if len(match_str) >= g:neocomplcache_min_keyword_length"{{{
       " Check dup.
-      let key = tolower(match_str[: s:completion_length-1])
+      let key = tolower(match_str[: completion_length-1])
       if !has_key(keywords, key)
         let keywords[key] = {}
       endif
@@ -194,6 +174,7 @@ function! s:get_sources_list()"{{{
 
   for [key, source] in items(s:buffer_sources)
     if has_key(filetypes_dict, source.filetype)
+          \ || has_key(filetypes_dict, '_')
           \ || bufnr('%') == key
           \ || (source.name ==# '[Command Line]' && bufnr('#') == key)
       call add(sources_list, [key, source])
@@ -242,7 +223,7 @@ function! s:word_caching(srcname)"{{{
         \ || getbufvar(a:srcname, '&buftype') =~ 'nofile'
     if a:srcname == bufnr('%')
       " Make buffer cache.
-      call s:caching_current_buffer(1, min([100, line('$')]), 0)
+      call s:caching_current_buffer(1, min([1000, line('$')]), 0)
     endif
 
     return
@@ -300,9 +281,7 @@ function! s:check_source()"{{{
 
   let source = s:buffer_sources[bufnumber]
   call neocomplcache#cache#check_cache_list('buffer_cache',
-        \ source.path,
-        \ s:async_dictionary_list,
-        \ source.keyword_cache, s:completion_length)
+        \ source.path, s:async_dictionary_list, source.keyword_cache)
 endfunction"}}}
 function! s:check_cache()"{{{
   let release_accessd_time =
@@ -362,23 +341,38 @@ function! s:exists_current_source()"{{{
 endfunction"}}}
 
 " Command functions."{{{
-function! s:caching_buffer(name)"{{{
+function! neocomplcache#sources#buffer_complete#caching_buffer(name)"{{{
   if a:name == ''
     let number = bufnr('%')
   else
     let number = bufnr(a:name)
 
     if number < 0
-      call neocomplcache#print_error('Invalid buffer name.')
-      return
+      let bufnr = bufnr('%')
+
+      " No swap warning.
+      let save_shm = &shortmess
+      set shortmess+=A
+
+      " Open new buffer.
+      execute 'silent! edit' fnameescape(a:name)
+
+      let &shortmess = save_shm
+
+      if bufnr('%') != bufnr
+        setlocal nobuflisted
+        execute 'buffer' bufnr
+      endif
     endif
+
+    let number = bufnr(a:name)
   endif
 
   " Word recaching.
   call s:word_caching(number)
   call s:caching_current_buffer(1, line('$'), 0)
 endfunction"}}}
-function! s:print_source(name)"{{{
+function! neocomplcache#sources#buffer_complete#print_source(name)"{{{
   if a:name == ''
     let number = bufnr('%')
   else
@@ -399,7 +393,7 @@ function! s:print_source(name)"{{{
     silent put =printf('%s => %s', key, string(s:buffer_sources[number][key]))
   endfor
 endfunction"}}}
-function! s:output_keyword(name)"{{{
+function! neocomplcache#sources#buffer_complete#output_keyword(name)"{{{
   if a:name == ''
     let number = bufnr('%')
   else
@@ -421,7 +415,7 @@ function! s:output_keyword(name)"{{{
     silent put=string(keyword)
   endfor
 endfunction "}}}
-function! s:disable_caching(name)"{{{
+function! neocomplcache#sources#buffer_complete#disable_caching(name)"{{{
   if a:name == ''
     let number = bufnr('%')
   else
@@ -440,7 +434,7 @@ function! s:disable_caching(name)"{{{
     call remove(s:buffer_sources, number)
   endif
 endfunction"}}}
-function! s:enable_caching(name)"{{{
+function! neocomplcache#sources#buffer_complete#enable_caching(name)"{{{
   if a:name == ''
     let number = bufnr('%')
   else

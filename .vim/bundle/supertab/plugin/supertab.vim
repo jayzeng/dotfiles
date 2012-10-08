@@ -60,6 +60,11 @@ if exists('complType') " Integration with other completion functions.
   finish
 endif
 
+if exists("loaded_supertab")
+  finish
+endif
+let loaded_supertab = 1
+
 let s:save_cpo=&cpo
 set cpo&vim
 
@@ -672,8 +677,10 @@ function! s:ExpandMap(map) " {{{
 endfunction " }}}
 
 function! SuperTabChain(completefunc, completekeys) " {{{
-  let b:SuperTabChain = [a:completefunc, a:completekeys]
-  setlocal completefunc=SuperTabCodeComplete
+  if a:completefunc != 'SuperTabCodeComplete'
+    let b:SuperTabChain = [a:completefunc, a:completekeys]
+    setlocal completefunc=SuperTabCodeComplete
+  endif
 endfunction " }}}
 
 function! SuperTabCodeComplete(findstart, base) " {{{
@@ -811,6 +818,10 @@ endfunction " }}}
           let bs .= "\<bs>"
           let i += 1
         endwhile
+        " escape keys
+        let result = substitute(result, '\(<[a-zA-Z][-a-zA-Z]*>\)', '\\\1', 'g')
+        " ensure escaped keys are properly recognized
+        exec 'let result = "' . escape(result, '"') . '"'
         return bs . result . (a:cr ? "\<cr>" : "")
       endif
 
