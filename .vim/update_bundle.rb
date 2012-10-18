@@ -37,6 +37,7 @@ git_bundles = %w{
   git://github.com/scrooloose/nerdcommenter.git
   git://github.com/klen/python-mode.git
   git://github.com/vim-scripts/taglist.vim.git
+  git://github.com/scrooloose/nerdcommenter.git
 }
 
 require 'fileutils'
