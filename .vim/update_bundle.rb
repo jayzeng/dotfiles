@@ -35,7 +35,6 @@ git_bundles = %w{
   git://github.com/altercation/vim-colors-solarized.git
   git://github.com/vim-scripts/Xdebug.git
   git://github.com/scrooloose/nerdcommenter.git
-  git://github.com/klen/python-mode.git
   git://github.com/vim-scripts/taglist.vim.git
   git://github.com/scrooloose/nerdcommenter.git
 }

@@ -1,3 +1,6 @@
 let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =1
+let g:netrw_dirhist_cnt =4
 let g:netrw_dirhist_1='/Users/jayzeng/Projects/HasOffers/Apiv3/Tests'
+let g:netrw_dirhist_2='/Users/jayzeng/Projects/IniReader/src'
+let g:netrw_dirhist_3='/Users/jayzeng/Projects/UW-PHP-course/lecture/lecture4/demo_code/zend_db'
+let g:netrw_dirhist_4='/Users/jayzeng/Projects/jobsyncer/Api/Entities'

@@ -34,7 +34,7 @@ set cpo&vim
 
 " Regex of syntax group names that are or delimit string or are comments.
 let s:syng_strcom = '\<ruby\%(Regexp\|RegexpDelimiter\|RegexpEscape' .
-      \ '\|String\|StringEscape\|ASCIICode' .
+      \ '\|String\|StringDelimiter\|StringEscape\|ASCIICode' .
       \ '\|Interpolation\|NoInterpolation\|Comment\|Documentation\)\>'
 
 " Regex of syntax group names that are strings.
@@ -496,14 +496,15 @@ function GetRubyIndent(...)
     return ind
   endif
 
-  " If the previous line ended with [*+/.,-=], but wasn't a block ending,
-  " indent one extra level.
-  if s:Match(lnum, s:non_bracket_continuation_regex) && !s:Match(lnum, '^\s*\(}\|end\)')
+  " If the previous line ended with [*+/.,-=], but wasn't a block ending or a
+  " closing bracket, indent one extra level.
+  if s:Match(lnum, s:non_bracket_continuation_regex) && !s:Match(lnum, '^\s*\([\])}]\|end\)')
     if lnum == p_lnum
       let ind = msl_ind + &sw
     else
       let ind = msl_ind
     endif
+    return ind
   endif
 
   " }}}2
