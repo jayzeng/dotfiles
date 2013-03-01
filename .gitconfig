@@ -46,6 +46,7 @@
     cb = !"git symbolic-ref HEAD|colrm 1 11"
     publish = "!f() { git push -u ${1:-origin} `git symbolic-ref HEAD`; }; f"
     unpublish = "!f() { git push -u ${1:-origin} :`git symbolic-ref HEAD`; }; f"
+    sync = "!f() { git pull prod master; }; f"
 [difftool "sourcetree"]
     cmd = opendiff \"$LOCAL\" \"$REMOTE\"
     path =
